@@ -4,15 +4,25 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
+	"sync"
 )
 
+var countUnique int
+var mu sync.Mutex
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <fileName>")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: go run main.go <fileName> <numProc>")
 		return
 	}
 
 	fileName := os.Args[1]
+	numProc, err := strconv.Atoi(os.Args[2])
+	if err != nil || numProc == 0 {
+		fmt.Println("You forget set param <numProc>")
+		return
+	}
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -23,7 +33,13 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	countUnique := 0
+	searchIPChan := make(chan string, 10)
+
+	for c := 0; c < numProc; c++ {
+		go scanIP2(searchIPChan, fileName)
+	}
+
+	// countUnique := 0
 	i := 0
 	for scanner.Scan() {
 		leftDiv := i % 1000
@@ -32,6 +48,26 @@ func main() {
 		}
 		ip := scanner.Text()
 
+		searchIPChan <- ip
+
+		i++
+	}
+
+	close(searchIPChan)
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	fmt.Println("Found uniqueu address: ", countUnique)
+}
+
+func scanIP2(searchIPChan <-chan string, fileName string) {
+
+	fmt.Println("Started proc")
+
+	for ip := range searchIPChan {
 		file2, err2 := os.Open(fileName)
 		if err2 != nil {
 			fmt.Println("Error opening file 2:", err2)
@@ -49,25 +85,17 @@ func main() {
 			}
 		}
 
-		if err := scanner2.Err(); err != nil {
-			fmt.Println("Error reading file2:", err)
-			return
-		}
-
 		file2.Close()
 
-		if !isFind {
-			countUnique++
-			fmt.Println("Found uniqueu address: ", countUnique)
+		if err := scanner2.Err(); err != nil {
+			fmt.Println("Error reading file2:", err)
 		}
 
-		i++
+		if !isFind {
+			mu.Lock()
+			countUnique++
+			mu.Unlock()
+			fmt.Println("Found uniqueu address: ", countUnique)
+		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-
-	fmt.Println("Found uniqueu address: ", countUnique)
 }
