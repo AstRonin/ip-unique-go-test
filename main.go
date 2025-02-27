@@ -71,7 +71,8 @@ func scanIP2(searchIPChan <-chan string, fileName string) {
 		file2, err2 := os.Open(fileName)
 		if err2 != nil {
 			fmt.Println("Error opening file 2:", err2)
-			return
+			fmt.Println("IP will need to check egain:", ip)
+			continue
 		}
 
 		scanner2 := bufio.NewScanner(file2)
