@@ -49,6 +49,11 @@ func main() {
 			}
 		}
 
+		if err := scanner2.Err(); err != nil {
+			fmt.Println("Error reading file2:", err)
+			return
+		}
+
 		file2.Close()
 
 		if !isFind {
