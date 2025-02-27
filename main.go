@@ -33,7 +33,7 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	searchIPChan := make(chan string, 10)
+	searchIPChan := make(chan string, numProc)
 
 	for c := 0; c < numProc; c++ {
 		go scanIP2(searchIPChan, fileName)
