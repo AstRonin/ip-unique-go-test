@@ -95,8 +95,8 @@ func scanIP2(searchIPChan <-chan string, fileName string) {
 		if !isFind {
 			mu.Lock()
 			countUnique++
-			mu.Unlock()
 			fmt.Println("Found uniqueu address: ", countUnique)
+			mu.Unlock()
 		}
 	}
 }
